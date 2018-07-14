@@ -76,14 +76,14 @@ io.on('connection',(socket)=>{
         if (newMove){
             // console.log("Special Case",newMove, oldMove.piece["name"])
             if (newMove === '0-0' && oldMove.piece["name"] === 'K'){
-                socket.emit('specialMove',{
+                socket.emit('castle',{
                     dest:"f1", 
                     notation:"R@h1",
                     name:"R",
                     source:"h1"
                 })
             }else if (newMove === '0-0' && oldMove.piece["name"] === 'k'){
-                socket.emit('specialMove',{
+                socket.emit('castle',{
                     dest:"f8",
                     notation:"r@h8",
                     name:"r",
@@ -91,14 +91,14 @@ io.on('connection',(socket)=>{
                 })
             }else if (newMove === '0-0-0' && oldMove.piece["name"] === 'K'){
                 console.log("entrando a enroque blanco")
-                socket.emit('specialMove',{
+                socket.emit('castle',{
                     dest:"d1",
                     notation:"R@a1",
                     name:"R",
                     source:"a1"
                 })
             }else if (newMove === '0-0-0' && oldMove.piece["name"] === 'k'){
-                socket.emit('specialMove',{
+                socket.emit('castle',{
                     dest:"d8",
                     notation:"r@a8",
                     name:"r",
@@ -107,6 +107,26 @@ io.on('connection',(socket)=>{
             }
             socket.emit('validMove',oldMove)
             move = gameClient.move(newMove);
+            console.log(move.move)
+            if (move.move.enPassant === true){
+                pawnToRemove = move.move.postSquare["file"]+move.move.prevSquare["rank"];
+                console.log("peon a remover",pawnToRemove)
+                console.log("debug Peon al paso: ",move.move.capturedPiece)
+                if (move.move.capturedPiece["side"].name === 'white'){
+                    var notation ='P@'+pawnToRemove
+                    var name = "P"
+                }else{
+                    var notation='p@'+pawnToRemove
+                    var name = "p"
+                }
+                socket.emit('enPassant',{
+                    dest:pawnToRemove,
+                    notation:notation,
+                    name:"P",
+                    source:move.source
+                })
+            }
+            
         }else{
             socket.emit('invalidMove',oldMove)
         }
@@ -143,3 +163,16 @@ io.on('connection',(socket)=>{
 server.listen(port, ()=>{
     console.log('Server listenning on port: '+port)
 }) 
+
+
+// { move:
+//     { algebraic: 'f6',
+//       capturedPiece:
+//        Pawn { moveCount: 1, notation: '', side: [Object], type: 'pawn' },
+//       castle: false,
+//       enPassant: true,
+//       postSquare: Square { file: 'f', piece: [Pawn], rank: 6 },
+//       prevSquare: Square { file: 'e', piece: null, rank: 5 } 
+//     },
+//    undo: [Function] 
+// }

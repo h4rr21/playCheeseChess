@@ -41,14 +41,22 @@ class App extends React.PureComponent {
 
     this.updateBoard(piece.name, piece.index, toSquare);
 
-    this.socket.on('specialMove',(spMove)=>{
+    this.socket.on('castle',(spMove)=>{
         var spIndex = this.state.pieces.indexOf(spMove.notation)
         if (spIndex >= 0) {
           this.updateBoard(spMove.name, spIndex, spMove.dest);
           saveState = this.state.pieces;
-          console.log('specialMove',spMove,spIndex)
+          console.log('castle',spMove,spIndex)
         }  
     })
+
+    this.socket.on('enPassant',(spMove)=>{
+      var spIndex = this.state.pieces.indexOf(spMove.notation)
+      this.updateBoard(spMove.name, -1, spMove.dest);
+      saveState = this.state.pieces;
+      console.log('enPassant',spMove,spIndex)
+  })
+
 
     this.socket.on('validMove',(resp)=>{
       console.log('valid move',resp)
