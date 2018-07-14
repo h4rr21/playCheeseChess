@@ -25,23 +25,73 @@ const gameClient = chess.create();
 //     console.log("invalid move found")
 // }
 
+// -----------------------FRONT---------------------
+// Translate to Regular Notation
+// { piece: { notation: 'p@e7', name: 'p', index: 18, position: 'e7' },
+//   source: 'e7',
+//   dest: 'e6' }
+
+// -----------------------BACK----------------------
+// Nc6:
+// { src: Square { file: 'b', piece: [Knight], rank: 8 },
+//   dest: Square { file: 'c', piece: null, rank: 6 } },
+
+translate = (move,possibleMoves)=>{
+    const {piece,dest,source} = move;
+    var  newMove = '';
+    console.log(move, possibleMoves);
+
+    Object.keys(possibleMoves).map((key, index) => {
+        var sourceB = possibleMoves[key].src['file']+possibleMoves[key].src['rank'];
+        console.log("source: ",sourceB)
+        var destB = possibleMoves[key].dest['file']+possibleMoves[key].dest['rank'];
+        console.log("dest: ",destB)
+        if (sourceB === source && destB === dest){
+            console.log(key);
+            newMove = key;
+        }
+        return { ...sourceB,destB};
+      });
+
+    if (newMove){
+        return newMove
+    }else{
+        return null
+    }
+    
+}
 
 io.on('connection',(socket)=>{
     status = gameClient.getStatus();
     console.log("game created -> ",status);
-    console.log("valid movements ->",status.notatedMoves)
+    console.log("valid movements ->",Object.keys(status.notatedMoves))
 
-    socket.on('move',(oneMove)=>{
-        status = gameClient.getStatus();
-        if (status.notatedMoves[oneMove]){
-            console.log("valid move found",oneMove)
-            jugadas.push(oneMove);
-            move = gameClient.move(oneMove);
-            socket.emit('validMove',oneMove)
+    socket.on('move',(oldMove)=>{
+        possibleMoves = gameClient.getStatus().notatedMoves;
+        newMove = translate(oldMove,possibleMoves)
+        console.log("*******",newMove)
+
+        if (newMove){
+            socket.emit('validMove',oldMove)
+            move = gameClient.move(newMove);
         }else{
-            console.log("invalid move found: ",oneMove)
-            socket.emit('invalidMove',oneMove)
+            socket.emit('invalidMove',oldMove)
         }
+        
+        // move = gameClient.move(oneMove.move);
+        // possibleMoves = Object.keys(gameClient.getStatus().notatedMoves);
+        // console.log(possibleMoves);
+
+
+        // if (status.notatedMoves[oneMove]){
+        //     console.log("valid move found",oneMove)
+        //     jugadas.push(oneMove);
+        //     move = gameClient.move(oneMove);
+        //     socket.emit('validMove',oneMove)
+        // }else{
+        //     console.log("invalid move found: ",oneMove)
+        //     socket.emit('invalidMove',oneMove)
+        // }
         
     });
 
