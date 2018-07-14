@@ -43,9 +43,9 @@ translate = (move,possibleMoves)=>{
 
     Object.keys(possibleMoves).map((key, index) => {
         var sourceB = possibleMoves[key].src['file']+possibleMoves[key].src['rank'];
-        console.log("source: ",sourceB)
+        //console.log("source: ",sourceB)
         var destB = possibleMoves[key].dest['file']+possibleMoves[key].dest['rank'];
-        console.log("dest: ",destB)
+        //console.log("dest: ",destB)
         if (sourceB === source && destB === dest){
             console.log(key);
             newMove = key;
@@ -67,11 +67,29 @@ io.on('connection',(socket)=>{
     console.log("valid movements ->",Object.keys(status.notatedMoves))
 
     socket.on('move',(oldMove)=>{
+        status = gameClient.getStatus();
+        console.log("----- debug ------ ",status);
         possibleMoves = gameClient.getStatus().notatedMoves;
         newMove = translate(oldMove,possibleMoves)
         console.log("*******",newMove)
 
         if (newMove){
+            // console.log("Special Case",newMove, oldMove.piece["name"])
+            if (newMove === '0-0' && oldMove.piece["name"] === 'K'){
+                socket.emit('specialMove',{
+                    dest:"f1", 
+                    notation:"R@h1",
+                    name:"R",
+                    source:"h1"
+                })
+            }else if (newMove === '0-0' && oldMove.piece["name"] === 'k'){
+                socket.emit('specialMove',{
+                    dest:"f8",
+                    notation:"R@h8",
+                    name:"R",
+                    source:"h8"
+                })
+            }
             socket.emit('validMove',oldMove)
             move = gameClient.move(newMove);
         }else{
