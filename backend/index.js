@@ -122,7 +122,7 @@ io.on('connection',(socket)=>{
                 socket.emit('enPassant',{
                     dest:pawnToRemove,
                     notation:notation,
-                    name:"P",
+                    name:name,
                     source:move.source
                 })
             }
