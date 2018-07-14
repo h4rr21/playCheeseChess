@@ -17,6 +17,7 @@ class App extends React.PureComponent {
   }
   
   updateBoard = (pieceName, pieceIndex, pieceDest)=>{
+    console.log("updating board",pieceName, pieceIndex, pieceDest)
     const newPieces = this.state.pieces
       .map((curr, index) => {
         if (pieceIndex === index) {
@@ -32,6 +33,7 @@ class App extends React.PureComponent {
   }
 
   handleMovePiece(piece, fromSquare, toSquare) {
+    
     console.log(piece, this.state.pieces)
     var saveState = this.state.pieces;
 
@@ -41,8 +43,11 @@ class App extends React.PureComponent {
 
     this.socket.on('specialMove',(spMove)=>{
         var spIndex = this.state.pieces.indexOf(spMove.notation)
-        this.updateBoard(spMove.name, spIndex, spMove.dest);
-        console.log('specialMove',spMove,spIndex)
+        if (spIndex >= 0) {
+          this.updateBoard(spMove.name, spIndex, spMove.dest);
+          saveState = this.state.pieces;
+          console.log('specialMove',spMove,spIndex)
+        }  
     })
 
     this.socket.on('validMove',(resp)=>{

@@ -85,9 +85,24 @@ io.on('connection',(socket)=>{
             }else if (newMove === '0-0' && oldMove.piece["name"] === 'k'){
                 socket.emit('specialMove',{
                     dest:"f8",
-                    notation:"R@h8",
-                    name:"R",
+                    notation:"r@h8",
+                    name:"r",
                     source:"h8"
+                })
+            }else if (newMove === '0-0-0' && oldMove.piece["name"] === 'K'){
+                console.log("entrando a enroque blanco")
+                socket.emit('specialMove',{
+                    dest:"d1",
+                    notation:"R@a1",
+                    name:"R",
+                    source:"a1"
+                })
+            }else if (newMove === '0-0-0' && oldMove.piece["name"] === 'k'){
+                socket.emit('specialMove',{
+                    dest:"d8",
+                    notation:"r@a8",
+                    name:"r",
+                    source:"a8"
                 })
             }
             socket.emit('validMove',oldMove)
