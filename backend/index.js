@@ -9,21 +9,8 @@ var port = 5000;
 var server = http.createServer(app);
 var io = socketIO(server);
 
-var jugadas = [];
-const gameClient = chess.create();
-
-// Test
-// const gameClient = chess.create();
-// status = gameClient.getStatus();
-// console.log("game created -> ",status);
-// console.log("valid movements ->",status.notatedMoves)
-
-// var moveToValidate = 'a5'
-// if (status.notatedMoves[moveToValidate]){
-//     console.log("valid move found")
-// }else{
-//     console.log("invalid move found")
-// }
+var frontBoardState = [];
+var gameClient = chess.create();
 
 // -----------------------FRONT---------------------
 // Translate to Regular Notation
@@ -36,6 +23,20 @@ const gameClient = chess.create();
 // { src: Square { file: 'b', piece: [Knight], rank: 8 },
 //   dest: Square { file: 'c', piece: null, rank: 6 } },
 
+// { move:
+//     { algebraic: 'f6',
+//       capturedPiece:
+//        Pawn { moveCount: 1, notation: '', side: [Object], type: 'pawn' },
+//       castle: false,
+//       enPassant: true,
+//       postSquare: Square { file: 'f', piece: [Pawn], rank: 6 },
+//       prevSquare: Square { file: 'e', piece: null, rank: 5 } 
+//     },
+//    undo: [Function] 
+// }
+
+
+// translate FRON notation to BACK notation
 translate = (move,possibleMoves)=>{
     const {piece,dest,source} = move;
     var  newMove = '';
@@ -63,27 +64,29 @@ translate = (move,possibleMoves)=>{
 
 io.on('connection',(socket)=>{
     status = gameClient.getStatus();
-    console.log("game created -> ",status);
-    console.log("valid movements ->",Object.keys(status.notatedMoves))
+    // console.log("game created -> ",status);
+    // console.log("valid movements ->",Object.keys(status.notatedMoves))
 
     socket.on('move',(oldMove)=>{
+        // save FRONT board state
+        frontBoardState = oldMove.boardState;
         status = gameClient.getStatus();
-        console.log("----- debug ------ ",status);
+        // console.log("----- debug ------ ",status);
         possibleMoves = gameClient.getStatus().notatedMoves;
         newMove = translate(oldMove,possibleMoves)
-        console.log("*******",newMove)
+        // console.log("******* debug ****",newMove)
 
         if (newMove){
             // console.log("Special Case",newMove, oldMove.piece["name"])
             if (newMove === '0-0' && oldMove.piece["name"] === 'K'){
-                socket.emit('castle',{
+                io.emit('castle',{
                     dest:"f1", 
                     notation:"R@h1",
                     name:"R",
                     source:"h1"
                 })
             }else if (newMove === '0-0' && oldMove.piece["name"] === 'k'){
-                socket.emit('castle',{
+                io.emit('castle',{
                     dest:"f8",
                     notation:"r@h8",
                     name:"r",
@@ -91,27 +94,27 @@ io.on('connection',(socket)=>{
                 })
             }else if (newMove === '0-0-0' && oldMove.piece["name"] === 'K'){
                 console.log("entrando a enroque blanco")
-                socket.emit('castle',{
+                io.emit('castle',{
                     dest:"d1",
                     notation:"R@a1",
                     name:"R",
                     source:"a1"
                 })
             }else if (newMove === '0-0-0' && oldMove.piece["name"] === 'k'){
-                socket.emit('castle',{
+                io.emit('castle',{
                     dest:"d8",
                     notation:"r@a8",
                     name:"r",
                     source:"a8"
                 })
             }
-            socket.emit('validMove',oldMove)
+            // io.emit('validMove',oldMove)
             move = gameClient.move(newMove);
-            console.log(move.move)
+            // console.log(move.move)
             if (move.move.enPassant === true){
                 pawnToRemove = move.move.postSquare["file"]+move.move.prevSquare["rank"];
-                console.log("peon a remover",pawnToRemove)
-                console.log("debug Peon al paso: ",move.move.capturedPiece)
+                // console.log("peon a remover",pawnToRemove)
+                // console.log("debug Peon al paso: ",move.move.capturedPiece)
                 if (move.move.capturedPiece["side"].name === 'white'){
                     var notation ='P@'+pawnToRemove
                     var name = "P"
@@ -119,7 +122,7 @@ io.on('connection',(socket)=>{
                     var notation='p@'+pawnToRemove
                     var name = "p"
                 }
-                socket.emit('enPassant',{
+                io.emit('enPassant',{
                     dest:pawnToRemove,
                     notation:notation,
                     name:name,
@@ -128,51 +131,16 @@ io.on('connection',(socket)=>{
             }
             
         }else{
-            socket.emit('invalidMove',oldMove)
+            io.emit('invalidMove',oldMove)
         }
         
-        // move = gameClient.move(oneMove.move);
-        // possibleMoves = Object.keys(gameClient.getStatus().notatedMoves);
-        // console.log(possibleMoves);
-
-
-        // if (status.notatedMoves[oneMove]){
-        //     console.log("valid move found",oneMove)
-        //     jugadas.push(oneMove);
-        //     move = gameClient.move(oneMove);
-        //     socket.emit('validMove',oneMove)
-        // }else{
-        //     console.log("invalid move found: ",oneMove)
-        //     socket.emit('invalidMove',oneMove)
-        // }
-        
-    });
-
-    // capture check and checkmate events
-    socket.on('check', (attack) => {
-    // get more details about the attack on the King
-    console.log(attack);
     });
 
     socket.on('resetGame',()=>{
         gameClient = chess.create();
-        jugadas
     });
 });
 
 server.listen(port, ()=>{
     console.log('Server listenning on port: '+port)
 }) 
-
-
-// { move:
-//     { algebraic: 'f6',
-//       capturedPiece:
-//        Pawn { moveCount: 1, notation: '', side: [Object], type: 'pawn' },
-//       castle: false,
-//       enPassant: true,
-//       postSquare: Square { file: 'f', piece: [Pawn], rank: 6 },
-//       prevSquare: Square { file: 'e', piece: null, rank: 5 } 
-//     },
-//    undo: [Function] 
-// }
