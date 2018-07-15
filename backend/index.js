@@ -67,6 +67,9 @@ io.on('connection',(socket)=>{
     // console.log("game created -> ",status);
     // console.log("valid movements ->",Object.keys(status.notatedMoves))
 
+    //Load FRONT board state
+    socket.emit('loadState',frontBoardState);
+
     socket.on('move',(oldMove)=>{
         // save FRONT board state
         frontBoardState = oldMove.boardState;

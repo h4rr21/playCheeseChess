@@ -13,9 +13,6 @@ class App extends React.PureComponent {
       allowMoves: true,
       oldState: {},
       endpoint: 'http://localhost:5000',
-      // defaulState: ['R@a1','P@a2','p@a7','r@a8','N@b1','P@b2','p@b7','n@b8','B@c1','P@c2','p@c7','b@c8','Q@d1',
-      // 'P@d2','p@d7','q@d8','K@e1','P@e2','p@e7','k@e8','B@f1','P@f2','p@f7','b@f8','N@g1','P@g2','p@g7','n@g8',
-      // 'R@h1','P@h2','p@h7','r@h8']
     }
     this.handleMovePiece = this.handleMovePiece.bind(this)
     this.resetapp = this.resetapp.bind(this)
@@ -59,6 +56,15 @@ class App extends React.PureComponent {
     const {pieces,endpoint} = this.state
     const socket = socketIo(endpoint)
 
+    // socket.on("loadState",(currentState)=>{
+    //   if (currentState){
+    //     this.setState({pieces:Chess.getDefaultLineup()});
+    //   }else{
+    //     this.setState({pieces:Chess.getDefaultLineup()});
+    //   }
+      
+    // })
+
     socket.on('castle',(spMove)=>{
       var spIndex = this.state.pieces.indexOf(spMove.notation)
       if (spIndex >= 0) {
@@ -83,7 +89,7 @@ class App extends React.PureComponent {
 
     return (
       <div className="App">
-        <button onClick={this.resetapp}>Click Me!</button> 
+        <button onClick={this.resetapp}>Reset Game</button> 
         <Chess pieces={pieces} allowMoves={this.state.allowMoves} onMovePiece={this.handleMovePiece} />
       </div>
     )
